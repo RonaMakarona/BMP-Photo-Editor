@@ -94,9 +94,16 @@ unsigned char grayscale(struct RGB rgb) {
 
 struct RGB changeBrightness(struct RGB rgb, float i) {
 
-	rgb.red = min(rgb.red + i, 255);
-	rgb.green = min(rgb.green + i, 255);
-	rgb.blue = min(rgb.blue + i, 255);
+	if (i >= 0) {
+		rgb.red = min(rgb.red + i, 255);
+		rgb.green = min(rgb.green + i, 255);
+		rgb.blue = min(rgb.blue + i, 255);
+	}
+	if (i < 0) {
+		rgb.red = max(rgb.red + i, 0);
+		rgb.green = max(rgb.green + i, 0);
+		rgb.blue = max(rgb.blue + i, 0);
+	}
 
 	return rgb;
 }
