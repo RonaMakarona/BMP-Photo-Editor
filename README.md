@@ -6,13 +6,16 @@ My bagrut project (Work in progress)
 This is a very cool graphic photo editor in C that edits BMP photos
 
 
-Features: Flipping vertically & horizontally! 
+## Features: 
 
 
-          A Black and White filter!
-          
-          
-          Brighten (or darken) feature!
+> - Flipping vertically & horizontally! 
+
+
+> - A Black and White filter!
+
+
+> - Brighten (or darken) feature!
 
 
 
