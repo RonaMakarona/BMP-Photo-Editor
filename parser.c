@@ -3,6 +3,10 @@
 #include <stdint.h>
 #include <windows.h>
 
+#define  Pr  .299
+#define  Pg  .587
+#define  Pb  .114
+
 typedef unsigned char char8;
 
 struct BITMAP_header {
@@ -88,6 +92,15 @@ unsigned char grayscale(struct RGB rgb) {
 	return ((0.3 * rgb.red) + (0.6 * rgb.green) + (0.1 * rgb.blue)) / 3;
 }
 
+struct RGB changeBrightness(struct RGB rgb, float i) {
+
+	rgb.red = min(rgb.red + i, 255);
+	rgb.green = min(rgb.green + i, 255);
+	rgb.blue = min(rgb.blue + i, 255);
+
+	return rgb;
+}
+
 void RGBtoGrayscale(struct BITMAP_header header, struct DIB_header dibheader, struct Image pic) {
 
 	FILE* fpw = fopen(tmpPath, "wb");
@@ -107,7 +120,7 @@ void RGBtoGrayscale(struct BITMAP_header header, struct DIB_header dibheader, st
 		}
 	}
 
-	for (int i = pic.height - 1; i >= 0; i--) {
+	for (int i = pic.height - 1; i >= 0; i--) { // writing them row by row
 		fwrite(pic.rgb[i], pic.width, sizeof(struct RGB), fpw);
 	}
 
@@ -116,6 +129,33 @@ void RGBtoGrayscale(struct BITMAP_header header, struct DIB_header dibheader, st
 	fclose(fpw);
 
 	return;
+}
+
+void brightenRGB(struct BITMAP_header header, struct DIB_header dibheader, struct Image pic, int brightness) {
+	FILE* fpw = fopen(tmpPath, "wb");
+	if (fpw == NULL) {
+		couldntOpen();
+		return;
+	}
+
+	fwrite(header.name, 2, 1, fpw);
+	fwrite(&header.size, 3 * sizeof(int), 1, fpw);
+
+	fwrite(&dibheader, sizeof(struct DIB_header), 1, fpw);
+
+	for (int i = 0; i < pic.height; i++) { // Saturating the pixels
+		for (int j = 0; j < pic.width; j++) {
+			pic.rgb[i][j] = changeBrightness(pic.rgb[i][j], brightness);
+		}
+	}
+
+	for (int i = pic.height - 1; i >= 0; i--) { // writing them row by row
+		fwrite(pic.rgb[i], pic.width, sizeof(struct RGB), fpw);
+	}
+
+
+
+	fclose(fpw);
 }
 
 
