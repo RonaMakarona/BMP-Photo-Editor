@@ -13,36 +13,46 @@
 
 #define FILE_NEW 1
 #define FILE_OPEN 2
-#define FILE_COLOR 3
+#define FILE_ABOUT 3
 #define FILE_SAVE 4
 #define FILE_FLIP_HORZ 5
 #define FILE_FLIP_VERT 6
 #define FILE_BW 7
 #define FILE_BRIGHTEN 8
 #define FILE_QUIT 9
+#define FILE_CONTRAST 10
+#define FILE_HOWTO 11
 
-#define IDI_SMALL 108 // for icon
-
-#define numToolbarButtons 5 //num of toolbar buttons
+#define numToolbarButtons 6 //num of toolbar buttons
 
 #define create_menus(menu)\
+HMENU subMenuCreate = CreateMenu();\
 AppendMenuW(menu, MF_STRING, FILE_NEW, L"&New");\
 AppendMenuW(menu, MF_STRING, FILE_OPEN, L"&Open");\
-AppendMenuW(menu, MF_STRING, FILE_COLOR, L"&Color Picker");\
+AppendMenuW(menu, MF_STRING | MF_POPUP, (UINT_PTR)subMenuCreate, L"&Flip");\
+AppendMenuW(subMenuCreate, MF_STRING, FILE_FLIP_HORZ, L"&Flip Horizontally");\
+AppendMenuW(subMenuCreate, MF_STRING, FILE_FLIP_VERT, L"&Flip Vertically"); \
 AppendMenuW(menu, MF_SEPARATOR, 0, NULL);\
 AppendMenuW(menu, MF_STRING, FILE_QUIT, L"&Quit");\
 
+
+//Function declerations
+
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK WndProcPopup(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK WndProcAbout(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK WndProcHowTo(HWND, UINT, WPARAM, LPARAM);
 
 ATOM RegisterBrightnessClass(HINSTANCE hInstance);
+ATOM RegisterAboutClass(HINSTANCE hInstance);
+ATOM RegisterHowToClass(HINSTANCE hInstance);
 
 void AddMenus(HWND);
 void OpenDialog(HWND);
 void SaveDialog(HWND);
 HWND CreateSimpleToolbar(HWND);
-void CreateControls(HWND hwnd);
-void UpdateLabel(void);
+void CreateControlsBrightness(HWND hwnd);
+void UpdateLabelBrightness(void);
 
 HWND ghwndEdit;
 
@@ -75,6 +85,12 @@ HWND hlbl;
 // popup window
 HWND popupHWND;
 
+// About window
+HWND aboutHWND;
+
+// Contrast window
+HWND howToHWND;
+
 // for brighten func
 int brightNum = 0;
 
@@ -96,12 +112,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     wc.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
     wc.lpfnWndProc = WndProc;
     wc.hCursor = LoadCursor(0, IDC_ARROW);
-    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SMALL));
-    //wc.hIconSm = LoadIcon(wc.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    // wc.hIcon = LoadIcon(hInstance, IDI_WINLOGO);
+    // wc.hIconSm = LoadIcon(wc.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     RegisterClassW(&wc);
 
+    //Registering new classes
     RegisterBrightnessClass(hInstance);
+    RegisterAboutClass(hInstance);
+    RegisterHowToClass(hInstance);
 
     HWND hwnd = CreateWindowW(wc.lpszClassName, L"Very cool editor",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -120,6 +139,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     return (int)msg.wParam;
 }
 
+
+// Creating a class for the brightness window
 ATOM RegisterBrightnessClass(HINSTANCE hInstance)
 {
     WNDCLASSW wcp = { 0 };
@@ -135,6 +156,38 @@ ATOM RegisterBrightnessClass(HINSTANCE hInstance)
     return RegisterClassW(&wcp);
 }
 
+// Creating a class for the about window
+ATOM RegisterAboutClass(HINSTANCE hInstance)
+{
+    WNDCLASSW wcp = { 0 };
+
+    wcp.style = CS_HREDRAW | CS_VREDRAW;
+    wcp.lpfnWndProc = WndProcAbout;
+    wcp.cbClsExtra = 0;
+    wcp.cbWndExtra = 0;
+    wcp.hInstance = hInstance;
+    wcp.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcp.lpszClassName = L"About";
+
+    return RegisterClassW(&wcp);
+}
+
+// Creating a class for the contrast window
+ATOM RegisterHowToClass(HINSTANCE hInstance)
+{
+    WNDCLASSW wcp = { 0 };
+
+    wcp.style = CS_HREDRAW | CS_VREDRAW;
+    wcp.lpfnWndProc = WndProcHowTo;
+    wcp.cbClsExtra = 0;
+    wcp.cbWndExtra = 0;
+    wcp.hInstance = hInstance;
+    wcp.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcp.lpszClassName = L"HowTo";
+
+    return RegisterClassW(&wcp);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
     WPARAM wParam, LPARAM lParam) {
 
@@ -144,7 +197,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
     BITMAP bitmap;
     HDC hdcMem;
     HGDIOBJ oldBitmap;
-    RECT rc;
 
 
 
@@ -157,6 +209,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
 
         // Creates in hidden mode the brightness trackbar
         popupHWND = CreateWindowW(L"Brightness", L"Brightness Trackbar",
+            (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) & ~WS_MAXIMIZEBOX | WS_BORDER | WS_EX_TOPMOST, 850, 200, 320, 150 , NULL, NULL, NULL, NULL);
+
+        // Creates in hidden mode about window
+        aboutHWND = CreateWindowW(L"About", L"About The Project",
+            (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) & ~WS_MAXIMIZEBOX | WS_BORDER | WS_EX_TOPMOST, 50, 50, 450, 265, NULL, NULL, NULL, NULL);
+
+        howToHWND = CreateWindowW(L"HowTo", L"How to use",
             (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) & ~WS_MAXIMIZEBOX | WS_BORDER | WS_EX_TOPMOST, 850, 200, 320, 150, NULL, NULL, NULL, NULL);
 
         CreateSimpleToolbar(hwnd);
@@ -226,8 +285,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
             }
             break;
 
-        case FILE_COLOR: {
-            MessageBeep(MB_OK); //TODO: draw pixels
+        case FILE_ABOUT: {
+            ShowWindow(aboutHWND, SW_SHOW);
+
             
             break;
         }
@@ -246,7 +306,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
             break;
         }
 
-        case FILE_FLIP_HORZ: {
+        case FILE_FLIP_VERT: {
             if (pathName[0] != NULL)
             {
 
@@ -272,13 +332,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
             break;
         }
 
-        case FILE_FLIP_VERT: {
+        case FILE_FLIP_HORZ: {
 
             if (*pathName != NULL) {
 
                 if (checkFileIntegrity(pathName) == 0) {
                     openbmpfile(pathName);
-                    flipImageVert(main_header, main_dibheader, main_pic);
+                    flipImageHorz(main_header, main_dibheader, main_pic);
                     strcpy(pathName, tmpPath);
                     RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
                 }
@@ -351,6 +411,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
             }
             break;
 
+        case FILE_CONTRAST:
+            if (pathName[0] != NULL)
+            {
+
+                if (checkFileIntegrity(pathName) == 0) {
+                    openbmpfile(pathName);
+                    contrastRGB(main_header, main_dibheader, main_pic);
+                    strcpy(pathName, tmpPath);
+                    RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+
+                }
+                else
+                {
+                    noFileSelected();
+                }
+
+            }
+            else
+            {
+                noFileSelected();
+
+            }
+            break;
+
+        case FILE_HOWTO:
+            ShowWindow(howToHWND, SW_SHOW);
+            break;
 
         case FILE_QUIT:
             SendMessage(hwnd, WM_CLOSE, 0, 0);
@@ -385,10 +472,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
         break;
 
 
-    case WM_HSCROLL: //Gets called when we move the slider of the trackbar
-        UpdateLabel();
-        break;
-
 
     case WM_DESTROY:
 
@@ -404,24 +487,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
 }
 
 
-// Popup
+// Popup windows proc
 LRESULT CALLBACK WndProcPopup(HWND hwnd, UINT msg,
     WPARAM wParam, LPARAM lParam) {
 
     switch (msg) {
 
     case WM_CREATE:
-       CreateControls(hwnd);
+        CreateControlsBrightness(hwnd);
        break;
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == 4) {
+
+        if (LOWORD(wParam) == 4) { // If enter is clicked
+
             brightenRGB(main_header, main_dibheader, main_pic, brightNum);
             strcpy(pathName, tmpPath);
             RedrawWindow(mainHWND, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+
         }
-    case WM_HSCROLL:
-        UpdateLabel();
+
+    case WM_HSCROLL: //Gets called when we move the slider of the trackbar
+        UpdateLabelBrightness();
         break;
 
     case WM_CLOSE:
@@ -437,4 +524,76 @@ LRESULT CALLBACK WndProcPopup(HWND hwnd, UINT msg,
     }
 
   
+}
+
+// About windows proc
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg,
+    WPARAM wParam, LPARAM lParam) {
+    static wchar_t* aboutInfo= L"\n\
+        This is a very cool photo editor that\n\
+        I have created for my final project in...\n\
+        ...computer science!!\n\
+        I hope you enjoy it and admire its coolness :D\n\
+        \n\
+        \Additional Information:\n\
+        - The project was made in c (not c++)!\n\
+        - Mama, please don't cry, I will be alright\n\
+        - You are more than welcome to send me any suggestions!\n\
+         \n\
+                                            \Project by Rona\n\
+                                            @makaronchik38 on twitter\n\
+                            ";
+
+    switch (msg) {
+
+    case WM_CREATE:
+        CreateWindowW(L"Static", aboutInfo,
+            WS_CHILD | WS_VISIBLE | SS_LEFT,
+            0, 0, 450, 250,
+            hwnd, (HMENU)1, NULL, NULL);
+        break;
+
+
+    case WM_CLOSE:
+        ShowWindow(hwnd, SW_HIDE);
+        break;
+
+    case WM_DESTROY:
+
+        break;
+
+    default:
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
+    }
+
+
+}
+
+LRESULT CALLBACK WndProcHowTo(HWND hwnd, UINT msg,
+    WPARAM wParam, LPARAM lParam) {
+
+    switch (msg) {
+
+    case WM_CREATE:
+
+        break;
+
+    case WM_COMMAND:
+
+
+    case WM_HSCROLL:
+
+        break;
+
+    case WM_CLOSE:
+        ShowWindow(hwnd, SW_HIDE);
+        break;
+
+    case WM_DESTROY:
+
+        break;
+
+    default:
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
+    }
 }

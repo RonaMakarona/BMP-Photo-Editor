@@ -3,10 +3,6 @@
 #include <stdint.h>
 #include <windows.h>
 
-#define  Pr  .299
-#define  Pg  .587
-#define  Pb  .114
-
 typedef unsigned char char8;
 
 struct BITMAP_header {
@@ -89,20 +85,25 @@ void freeImage(struct Image pic) {
 }
 
 unsigned char grayscale(struct RGB rgb) {
-	return ((0.3 * rgb.red) + (0.6 * rgb.green) + (0.1 * rgb.blue)) / 3;
+	return (unsigned char) ((0.3 * rgb.red) + (0.6 * rgb.green) + (0.1 * rgb.blue)) / 3;
 }
 
 struct RGB changeBrightness(struct RGB rgb, float i) {
 
-	if (i >= 0) {
+	if (i >= 0) { //Brightening mode :D
+
 		rgb.red = min(rgb.red + i, 255);
 		rgb.green = min(rgb.green + i, 255);
 		rgb.blue = min(rgb.blue + i, 255);
+
 	}
-	if (i < 0) {
+
+	if (i < 0) { // Darkening mode D:
+
 		rgb.red = max(rgb.red + i, 0);
 		rgb.green = max(rgb.green + i, 0);
 		rgb.blue = max(rgb.blue + i, 0);
+
 	}
 
 	return rgb;
@@ -150,7 +151,7 @@ void brightenRGB(struct BITMAP_header header, struct DIB_header dibheader, struc
 
 	fwrite(&dibheader, sizeof(struct DIB_header), 1, fpw);
 
-	for (int i = 0; i < pic.height; i++) { // Saturating the pixels
+	for (int i = 0; i < pic.height; i++) { // Brightening the pixels
 		for (int j = 0; j < pic.width; j++) {
 			pic.rgb[i][j] = changeBrightness(pic.rgb[i][j], brightness);
 		}
@@ -166,9 +167,62 @@ void brightenRGB(struct BITMAP_header header, struct DIB_header dibheader, struc
 }
 
 
+// Contrasing RGB colors pixel function
+struct RGB changeContrast(struct RGB rgb) {
+
+	// the function checks what rgb value is the strongest, and sets the over values to 0
+	if (rgb.red > rgb.blue && rgb.red > rgb.green)
+	{
+		rgb.blue = 0;
+		rgb.green = 0;
+	}
+	else if (rgb.blue > rgb.red && rgb.blue > rgb.green)
+	{
+		rgb.red = 0;
+		rgb.green = 0;
+	}
+	else {
+		rgb.blue = 0;
+		rgb.red = 0;
+	}
+
+
+	return rgb;
+}
+
+
+
+void contrastRGB(struct BITMAP_header header, struct DIB_header dibheader, struct Image pic) {
+	FILE* fpw = fopen(tmpPath, "wb");
+	if (fpw == NULL) {
+		couldntOpen();
+		return;
+	}
+
+	fwrite(header.name, 2, 1, fpw);
+	fwrite(&header.size, 3 * sizeof(int), 1, fpw);
+
+	fwrite(&dibheader, sizeof(struct DIB_header), 1, fpw);
+
+	for (int i = 0; i < pic.height; i++) { // Contrasting the pixels
+		for (int j = 0; j < pic.width; j++) {
+			pic.rgb[i][j] = changeContrast(pic.rgb[i][j]);
+		}
+	}
+
+	for (int i = pic.height - 1; i >= 0; i--) { // writing them row by row
+		fwrite(pic.rgb[i], pic.width, sizeof(struct RGB), fpw);
+	}
+
+
+
+	fclose(fpw);
+}
+
+
 void createImage(struct BITMAP_header header, struct DIB_header dibheader, struct Image pic) {
 
-	//Creates a flipped image 
+	//Creates a flipped image vertically
 
 	FILE* fpw = fopen(tmpPath, "wb");
 	if (fpw == NULL) {
@@ -199,9 +253,10 @@ int flipImage() {
 	return 0;
 }
 
-void flipImageVert(struct BITMAP_header header, struct DIB_header dibheader, struct Image pic) {
 
-	// Flips the image vertically 
+void flipImageHorz(struct BITMAP_header header, struct DIB_header dibheader, struct Image pic) {
+
+	// Flips the image Horizontally
 
 	FILE* fpw = fopen(tmpPath, "wb");
 	if (fpw == NULL) {
@@ -235,6 +290,8 @@ void flipImageVert(struct BITMAP_header header, struct DIB_header dibheader, str
 
 }
 
+
+//saving image to a given path
 void writeImageToSave(TCHAR pathImage[MAX_PATH]) {
 	FILE* fpw = fopen(pathImage, "wb");
 	if (fpw == NULL) {
@@ -298,6 +355,7 @@ int checkFileIntegrity(TCHAR pathName[MAX_PATH]) {
 	return 0;
 }
 
+
 void openbmpfile(TCHAR pathName[MAX_PATH]) {
 	FILE* fp = fopen(pathName, "rb"); // read binary
 
@@ -340,5 +398,5 @@ void openbmpfile(TCHAR pathName[MAX_PATH]) {
 
 	fclose(fp);
 
-	return 0;
+	return;
 }

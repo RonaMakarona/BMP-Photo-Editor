@@ -20,7 +20,6 @@ void AddMenus(HWND hwnd) {
 
     AppendMenuW(hMenuFile, MF_STRING, FILE_NEW, L"&New");
     AppendMenuW(hMenuFile, MF_STRING, FILE_OPEN, L"&Open");
-    AppendMenuW(hMenuFile, MF_STRING, FILE_COLOR, L"&Color Picker");
     AppendMenuW(hMenuFile, MF_STRING, FILE_SAVE, L"&Save");
 
     AppendMenuW(hMenuFile, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenuFile, L"&Flip");
@@ -30,10 +29,12 @@ void AddMenus(HWND hwnd) {
     AppendMenuW(hMenuFile, MF_SEPARATOR, 0, NULL);
     AppendMenuW(hMenuFile, MF_STRING, FILE_QUIT, L"&Quit");
 
-    AppendMenuW(hMenuHelp, MF_STRING, FILE_NEW, L"&Test");
+    AppendMenuW(hMenuHelp, MF_STRING, FILE_HOWTO, L"&How to use"); //TODO: Add tips like in ghidra
+    AppendMenuW(hMenuHelp, MF_STRING, FILE_ABOUT, L"&About"); 
 
-    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenuFile, L"&File");
-    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenuHelp, L"&Test");
+    // Main menubar options
+    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenuFile, L"&File"); 
+    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenuHelp, L"&Help");
     SetMenu(hwnd, hMenubar);
 
 }
@@ -81,7 +82,7 @@ void SaveDialog(HWND hwnd) {
     ofn.lpstrFile[0] = '\0';
     ofn.hwndOwner = hwnd;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("bmp files (*.BMP)\0*.bmp\0");
+    ofn.lpstrFilter = TEXT("bmp files (*.BMP)\0*.bmp\0"); // file filter
     ofn.nFilterIndex = 1;
     ofn.lpstrInitialDir = NULL;
     ofn.lpstrFileTitle = NULL;
@@ -132,7 +133,8 @@ HWND CreateSimpleToolbar(HWND hWndParent)
         { MAKELONG(STD_FILEOPEN, ImageListID), FILE_OPEN, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)TEXT("Open")},
         { MAKELONG(STD_FILESAVE, ImageListID), FILE_SAVE, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)TEXT("Save")},
         { MAKELONG(STD_PROPERTIES, ImageListID), FILE_BW, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)TEXT("B&&W")},
-        { MAKELONG(STD_HELP, ImageListID), FILE_BRIGHTEN, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)TEXT("Brighten")}
+        { MAKELONG(STD_HELP, ImageListID), FILE_BRIGHTEN, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)TEXT("Brighten")},
+        { MAKELONG(STD_REPLACE, ImageListID), FILE_CONTRAST, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)TEXT("Contrast RGB")}
     };
 
     // Add buttons.
@@ -146,7 +148,7 @@ HWND CreateSimpleToolbar(HWND hWndParent)
     return hWndToolbar;
 }
 
-void CreateControls(HWND hwnd) {
+void CreateControlsBrightness(HWND hwnd) {
 
     // Creates the trackbar controls
 
@@ -181,7 +183,8 @@ void CreateControls(HWND hwnd) {
     SendMessageW(hTrack, TBM_SETBUDDY, FALSE, (LPARAM)hRightLabel);
 }
 
-void UpdateLabel(void) {
+
+void UpdateLabelBrightness(void) {
 
     LRESULT pos = SendMessageW(hTrack, TBM_GETPOS, 0, 0); // getting the current position of the trackbar
     wchar_t buf[4];
@@ -190,4 +193,5 @@ void UpdateLabel(void) {
     brightNum = pos;
     SetWindowTextW(hlbl, buf); // setting the new position as text
 }
+
 
