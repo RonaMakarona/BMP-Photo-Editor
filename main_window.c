@@ -302,6 +302,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
                     noFileSelected();
                 }
             }
+            else
+            {
+                noFileSelected();
+
+            }
 
             break;
         }
