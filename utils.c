@@ -1,6 +1,6 @@
 void invalidFile(HWND hwnd) {
     MessageBoxW(NULL, L"File invalid", L"Error", MB_OK);
-    strcpy(pathName, tmpPath);
+    strcpy_s(pathName,MAX_PATH, tmpPath);
 }
 
 void noFileSelected() {

@@ -92,17 +92,17 @@ struct RGB changeBrightness(struct RGB rgb, float i) {
 
 	if (i >= 0) { //Brightening mode :D
 
-		rgb.red = min(rgb.red + i, 255);
-		rgb.green = min(rgb.green + i, 255);
-		rgb.blue = min(rgb.blue + i, 255);
+		rgb.red = (char)min(rgb.red + i, 255);
+		rgb.green = (char)min(rgb.green + i, 255);
+		rgb.blue = (char)min(rgb.blue + i, 255);
 
 	}
 
 	if (i < 0) { // Darkening mode D:
 
-		rgb.red = max(rgb.red + i, 0);
-		rgb.green = max(rgb.green + i, 0);
-		rgb.blue = max(rgb.blue + i, 0);
+		rgb.red = (char)max(rgb.red + i, 0);
+		rgb.green = (char)max(rgb.green + i, 0);
+		rgb.blue = (char)max(rgb.blue + i, 0);
 
 	}
 
@@ -378,13 +378,6 @@ void openbmpfile(TCHAR pathName[MAX_PATH]) {
 	readint(fp, &dibheader.temp[1], 4);
 	readint(fp, &dibheader.temp[2], 4);
 	readint(fp, &dibheader.temp[3], 4);
-
-	char* buf = malloc(dibheader.image_size);
-	if (!buf) {
-		return 0;
-	}
-
-	fread(buf, 1, dibheader.image_size, fp);
 
 	fseek(fp, header.image_offset, SEEK_SET);
 

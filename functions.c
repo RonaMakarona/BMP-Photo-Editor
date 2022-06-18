@@ -57,13 +57,13 @@ void OpenDialog(HWND hwnd) {
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
     if (GetOpenFileName(&ofn)) {
-        strcpy(pathName, szFile);
+        strcpy_s(pathName,MAX_PATH, szFile);
         if (checkFileIntegrity(pathName) == 1) {
             invalidFile(hwnd);
             return;
         }
         openbmpfile(pathName);
-        strcpy(pathName, tmpPath); // check if needed
+        strcpy_s(pathName,MAX_PATH, tmpPath); // check if needed
         writeImageToSave(tmpPath);
         RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 
@@ -90,7 +90,7 @@ void SaveDialog(HWND hwnd) {
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT;
 
     if (GetSaveFileName(&ofn)) {
-        strcpy(pathName, szFile);
+        strcpy_s(pathName,MAX_PATH, szFile);
         writeImageToSave(pathName);
     }
 }

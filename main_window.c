@@ -240,7 +240,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
         }
         else
         {
-            strcpy(tmpPath, szTempFileName);
+            strcpy_s(tmpPath, MAX_PATH, szTempFileName);
         }
 
         break;
@@ -318,7 +318,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
                 if (checkFileIntegrity(pathName) == 0) {
                     openbmpfile(pathName);
                     flipImage();
-                    strcpy(pathName, tmpPath);
+                    strcpy_s(pathName, MAX_PATH, tmpPath);
                     RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 
                 }
@@ -344,7 +344,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
                 if (checkFileIntegrity(pathName) == 0) {
                     openbmpfile(pathName);
                     flipImageHorz(main_header, main_dibheader, main_pic);
-                    strcpy(pathName, tmpPath);
+                    strcpy_s(pathName, MAX_PATH, tmpPath);
                     RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
                 }
                 else
@@ -367,7 +367,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
                 if (checkFileIntegrity(pathName) == 0) {
                     openbmpfile(pathName);
                     RGBtoGrayscale(main_header, main_dibheader, main_pic);
-                    strcpy(pathName, tmpPath);
+                    strcpy_s(pathName,MAX_PATH, tmpPath);
                     RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 
                 }
@@ -423,7 +423,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
                 if (checkFileIntegrity(pathName) == 0) {
                     openbmpfile(pathName);
                     contrastRGB(main_header, main_dibheader, main_pic);
-                    strcpy(pathName, tmpPath);
+                    strcpy_s(pathName,MAX_PATH, tmpPath);
                     RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 
                 }
@@ -507,7 +507,7 @@ LRESULT CALLBACK WndProcPopup(HWND hwnd, UINT msg,
         if (LOWORD(wParam) == 4) { // If enter is clicked
 
             brightenRGB(main_header, main_dibheader, main_pic, brightNum);
-            strcpy(pathName, tmpPath);
+            strcpy_s(pathName,MAX_PATH, tmpPath);
             RedrawWindow(mainHWND, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 
         }
@@ -538,12 +538,12 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg,
         ...computer science!!\n\
         I hope you enjoy it and admire its coolness :D\n\
         \n\
-        \Additional Information:\n\
+        Additional Information:\n\
         - The project was made in c (not c++)!\n\
         - Mama, please don't cry, I will be alright\n\
         - You are more than welcome to send me any suggestions!\n\
          \n\
-                                            \Project by Rona\n\
+                                            Project by Rona\n\
                                             @makaronchik38 on twitter\n\
                             ";
 
