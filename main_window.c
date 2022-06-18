@@ -216,7 +216,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
             (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) & ~WS_MAXIMIZEBOX | WS_BORDER | WS_EX_TOPMOST, 50, 50, 450, 265, NULL, NULL, NULL, NULL);
 
         howToHWND = CreateWindowW(L"HowTo", L"How to use",
-            (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) & ~WS_MAXIMIZEBOX | WS_BORDER | WS_EX_TOPMOST, 850, 200, 320, 150, NULL, NULL, NULL, NULL);
+            (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) & ~WS_MAXIMIZEBOX | WS_BORDER | WS_EX_TOPMOST, 200, 100, 480, 480, NULL, NULL, NULL, NULL);
 
         CreateSimpleToolbar(hwnd);
         AddMenus(hwnd);
@@ -279,13 +279,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
         switch (LOWORD(wParam)) {
 
         case FILE_NEW:
-        case FILE_OPEN:
+        case FILE_OPEN: // both file and open do the same thing
             if (wParam == FILE_NEW || wParam == FILE_OPEN) {
                 OpenDialog(hwnd);
             }
             break;
 
-        case FILE_ABOUT: {
+        case FILE_ABOUT: { // view about window
             ShowWindow(aboutHWND, SW_SHOW);
 
             
@@ -293,9 +293,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
         }
 
         case FILE_SAVE: {
-            if (pathName[0] != NULL)
+            if (pathName[0] != NULL) // check if there is a valid path
             {
-                if (checkFileIntegrity(pathName) == 0) {
+                if (checkFileIntegrity(pathName) == 0) { // check file integrity
                     SaveDialog(hwnd);
                 }
                 else {
@@ -500,7 +500,7 @@ LRESULT CALLBACK WndProcPopup(HWND hwnd, UINT msg,
 
     case WM_CREATE:
         CreateControlsBrightness(hwnd);
-       break;
+        break;
 
     case WM_COMMAND:
 
@@ -511,6 +511,7 @@ LRESULT CALLBACK WndProcPopup(HWND hwnd, UINT msg,
             RedrawWindow(mainHWND, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 
         }
+        break;
 
     case WM_HSCROLL: //Gets called when we move the slider of the trackbar
         UpdateLabelBrightness();
@@ -521,13 +522,10 @@ LRESULT CALLBACK WndProcPopup(HWND hwnd, UINT msg,
         break;
 
     case WM_DESTROY:
-        
-       break;
 
-    default:
-        return DefWindowProcW(hwnd, msg, wParam, lParam);
+        break;
     }
-
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
   
 }
 
@@ -566,21 +564,46 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg,
     case WM_DESTROY:
 
         break;
-
-    default:
-        return DefWindowProcW(hwnd, msg, wParam, lParam);
     }
 
-
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 LRESULT CALLBACK WndProcHowTo(HWND hwnd, UINT msg,
     WPARAM wParam, LPARAM lParam) {
+    static wchar_t* howToInfo = L"\n\
+                                                HOW TO USE \n\
+    \n\
+    How to use:\n\
+    + To open a new image, you can either use the toolbar,\n\
+      or use the File menu. In both ways, Open and New will\n\
+      give you the option to edit a new file.\n\
+    \n\
+    + To save an image, just like the new and open options, \n\
+      you can click the Save button in both the toolbar and the File menu.\n\
+    \n\
+    + To flip an image, open the File menu and click on flip.\n\
+      After clicking on flip, choose what type of flip you want to use.\n\
+    \n\
+    + All other editing features can be accessed through the toolbar.\n\
+    \n\
+    \n\
+    \n\
+                                            EDITING FEATURES:\n\
+    \n\
+    * B&&W \n\
+    * Flip (horizontal and vertical)\n\
+    * Adjust brightness\n\
+    * RGB filter \n\
+                            ";
 
     switch (msg) {
 
     case WM_CREATE:
-
+        CreateWindowW(L"Static", howToInfo,
+            WS_CHILD | WS_VISIBLE | SS_LEFT,
+            0, 0, 480, 480,
+            hwnd, (HMENU)1, NULL, NULL);
         break;
 
     case WM_COMMAND:
@@ -598,7 +621,7 @@ LRESULT CALLBACK WndProcHowTo(HWND hwnd, UINT msg,
 
         break;
 
-    default:
-        return DefWindowProcW(hwnd, msg, wParam, lParam);
     }
+
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
